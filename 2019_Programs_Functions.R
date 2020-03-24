@@ -81,6 +81,24 @@ get_details <- function(webPage, class, urlGrab = F){
   
 }
 
+get_details_xpath <- function(webPage, xpath, urlGrab = F){
+  
+  if(urlGrab == F){
+    detail = webPage %>% 
+      html_nodes(xpath = xpath) %>% 
+      html_text()
+    
+    detail = sapply(detail, function(x) clean_tags(x))
+  } else {
+    detail = webPage %>% 
+      html_nodes(xpath = xpath) %>% 
+      html_attr("href")
+  }
+  
+  return(detail)
+  
+}
+
 # key workhorse - gets table from specific class in html structure
 get_details_table <- function(webPage, class = NA, xpath = NA){
   if(is.na(xpath)){
@@ -96,26 +114,41 @@ get_details_table <- function(webPage, class = NA, xpath = NA){
   }
 }
 
-# key workhorse - gets table from specific class in html structure
-get_details_table_xpath <- function(webPage, xpath){
-  detail = webPage %>% 
-    html_nodes(xpath = xpath) %>% 
-    html_table(fill = T)
-  return(detail)
-}
+## key workhorse - gets table from specific class in html structure
+#get_details_table_xpath <- function(webPage, xpath){
+#  detail = webPage %>% 
+#    html_nodes(xpath = xpath) %>% 
+#    html_table(fill = T)
+#  return(detail)
+#}
 
-get_details_id <- function(webPage, id, class = NA){
-  if(is.na(class)){
-    detail = webPage %>% 
-      html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
-      html_text()
+get_details_id <- function(webPage, id, class = NA, class_before = T){
+  if(class_before == T){
+    if(is.na(class)){
+      detail = webPage %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_text()
+    } else {
+      detail = webPage %>% 
+        html_nodes(class) %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_text()
+      
+    }
   } else {
-    detail = webPage %>% 
-      html_nodes(class) %>% 
-      html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
-      html_text()
-    
+    if(is.na(class)){
+      detail = webPage %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_text()
+    } else {
+      detail = webPage %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_nodes(class) %>% 
+        html_text()
+      
+    }
   }
+
   
   detail = sapply(detail, function(x) clean_tags(x))
   
@@ -125,28 +158,60 @@ get_details_id <- function(webPage, id, class = NA){
 ## using regex search through first set of texts to find a specific node within nodes
 # Use only if there is no other tag to go by
 # add 3rd class if you want to go one step deeper
-get_details_index <- function(webPage, searchString, class_1, class_2, class_3 = NA, urlGrab = F){
+get_details_index <- function(webPage, searchString, class_1, class_2, class_3 = NA, urlGrab = F, index_offset = 0, use_last_position = F){
+  #Finding text to search for searchString using class_1
   index = webPage %>% 
     html_nodes(class_1) %>% 
     html_text()
+  #print(index)
   
+  #Finding position of searchString in the text
   index = grep(searchString, index, ignore.case = T)
+  #print(index)  
   
+  #if index_offset is given, adjusting index_offset here
+  index = index + index_offset
+  #print(index)
+
+  #Finding details text - text where the actual information is stored
   detail = webPage %>% 
     html_nodes(class_2)
   
+
+  
+  #Moving on to isolating the desired details from above object "detail"
   if(length(index) > 0){
+    
+    #if use_last_position is true overwrite index
+    if(use_last_position == T){
+      if(index > length(detail)){
+        print(index)
+        print(length(detail))
+        index = length(detail)
+      }
+    }
+    
+    
     if(urlGrab == F) {
+      
+      #If only searching a simple one layer down css grab
       if(is.na(class_3)){
+        #print("No class_3 given")
         detail = detail[index] %>% 
           html_text()
+        
+
         
         detail = sapply(detail, function(x) clean_tags(x))
         return(detail)
       } else {
+        #print("Class_3 given")
+        #print(detail[index])
+        #If using a class further down
         detail = detail[index] %>% 
           html_nodes(class_3) %>% 
           html_text()
+        
         
         detail = sapply(detail, function(x) clean_tags(x))
         return(detail)
@@ -173,6 +238,13 @@ get_details_index <- function(webPage, searchString, class_1, class_2, class_3 =
   return(NA)
 }
 
+get_details_for_filtering <- function(webPage, class, split_on = "\n"){
+  return(webPage %>% 
+           html_nodes(class) %>% 
+           html_text() %>% 
+           strsplit(split_on) %>% 
+           unlist())
+}
 #Function for finding button to click, then finding subsequently revealed data using RSelenium variable
 find_and_click <- function(remDr, clickPath, dataPath, pause = .75){
   
@@ -211,15 +283,19 @@ combine_details <- function(webPage, class_names, class_content){
 
 
 create_program_df <- function(Institution, url = NA, Program = NA, Credential = NA, Campus = NA, Duration = NA, Description = NA, WIL = NA){
+
+  program = tibble(institution_name = Institution$institution_name,
+                   url = url, 
+                   Program = Program, 
+                   Credential = Credential, 
+                   Campus = Campus, 
+                   Duration = Duration, 
+                   Description = Description, 
+                   WIL = WIL)
+
+  
   program = Institution %>% 
-    left_join(tibble(institution_name = Institution$institution_name,
-                     url = url, 
-                     Program = Program, 
-                     Credential = Credential, 
-                     Campus = Campus, 
-                     Duration = Duration, 
-                     Description = Description, 
-                     WIL = WIL),
+    left_join(program,
               by = "institution_name")
   
   return(program)
@@ -252,7 +328,7 @@ get_courses <- function(url, isTable = T, tableContClass){
 }
 
 clean_string <- function(stringVar){
-  return(gsub(" |/", "_", gsub('\\"|\n|\\(|\\)|&|-', "", stringVar)))
+  return(gsub(" |/", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*', "", stringVar)))
 }
 
 
@@ -277,7 +353,7 @@ course_eval <- function(courses, Institution, Program, Program_url, noDescriptio
 
   
   dir.create(paste0("courses/", clean_string(Institution)), showWarnings = FALSE)
-  progFileName <- gsub(" |/|_2,}", "_", gsub('\\"|\n|\\(|\\)|&|-', "", Program))
+  progFileName <- gsub(" |/|_2,}", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*', "", Program))
   if(nchar(progFileName) > 50){
     progFileName <- substr(progFileName,1,50)
   }

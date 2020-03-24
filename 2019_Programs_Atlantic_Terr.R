@@ -18,6 +18,7 @@ colleges %>%
 #college de technologie forestiere des maritimes             New Brunswick
 #moncton hospital school of radiologic technology             New Brunswick
 #saint john school of radiation therapy             New Brunswick
+##                          canadian coast guard college               Nova Scotia
 
 ##     Collège communautaire du Nouveau-Brunswick (CCNB)             New Brunswick
 ##       college de technologie forestiere des maritimes             New Brunswick
@@ -62,26 +63,9 @@ list.files("2019_Programs_Atlantic_Terr")
 
 
 #Check vs old files, clean and enter
+#CIP matching?
 
 
-
-
-#############################
-##### Collège Nordique Francophone
-## Type of website:
-Institution <- CIConnexName("Collège Nordique Francophone")
-
-
-#############################
-#### canadian coast guard college
-## Type of website:
-Institution <- CIConnexName("canadian coast guard collegey")
-
-
-#############################
-##### Cape Breton University
-## Type of website:
-Institution <- CIConnexName("Cape Breton University")
 
 
 #############################

@@ -14,6 +14,7 @@ remove(Fees)
 remove(fees)
 #for(url in 1:1){
 for(url in 1:nrow(program_urls)){
+  tryCatch({
   print(url)
   webPage = read_webPage(program_urls$url[url])
   
@@ -34,6 +35,7 @@ for(url in 1:nrow(program_urls)){
   } else {
     programs = program
   }
+  }, error = function(e){cat("ERROR :", conditionMessage(e), "\n")})
 }
 
 programs <- programs %>% 

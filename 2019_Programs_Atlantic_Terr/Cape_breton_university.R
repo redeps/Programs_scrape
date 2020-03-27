@@ -25,6 +25,7 @@ Tuition = tibble(Tuition = read_html("https://www.cbu.ca/future-students/tuition
 remove(Fees)
 remove(programs)
 for(url in 1:nrow(url_df)){
+  tryCatch({
   Program = url_df$Program[url]
   Credential = url_df$Credential[url]
   Program_url = url_df$Program_url[url]
@@ -64,7 +65,7 @@ for(url in 1:nrow(url_df)){
   } else {
     Fees = Fees %>% bind_rows(Program_tuition)
   }
-  
+}, error = function(e){cat("ERROR :", conditionMessage(e), "\n")})
 }
 
 save_out_standard_file(programs, Institution$institution_name, "Atlantic")

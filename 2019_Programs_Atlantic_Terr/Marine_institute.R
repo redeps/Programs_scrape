@@ -47,6 +47,7 @@ remove(programs)
 remove(Fees)
 #for(url in 1:1){
 for(url in 1:nrow(program_urls)){
+  tryCatch({
   Credential = program_urls$text[url]
   feeUrl = program_urls$feeUrl[url]
   url = program_urls$url[url]
@@ -126,7 +127,7 @@ for(url in 1:nrow(program_urls)){
   } else {
     programs = program
   }
-  
+  }, error = function(e){cat("ERROR :", conditionMessage(e), "\n")})
 }
 
 names(programs)

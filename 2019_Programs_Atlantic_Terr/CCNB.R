@@ -30,6 +30,7 @@ remove(programs)
 remove(Fees)
 remove(courses)
 for(url in 1:nrow(program_urls)){
+  tryCatch({
   print(url)
   webPage = read_webPage(program_urls$url[url])
   program = create_program_df(Institution = Institution,
@@ -67,7 +68,7 @@ for(url in 1:nrow(program_urls)){
   } else {
     programs = program
   }
-  
+}, error = function(e){cat("ERROR :", conditionMessage(e), "\n")})
 }
 programs <- programs %>% 
   separate(Duration, c("Duration", "WIL_2"), sep = ",") %>% 

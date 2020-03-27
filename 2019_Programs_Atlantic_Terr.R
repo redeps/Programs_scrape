@@ -19,6 +19,9 @@ colleges %>%
 #moncton hospital school of radiologic technology             New Brunswick
 #saint john school of radiation therapy             New Brunswick
 ##                          canadian coast guard college               Nova Scotia
+##               halifax regional police training school               Nova Scotia
+##              maritime conservatory of performing arts               Nova Scotia
+
 
 ##     Collège communautaire du Nouveau-Brunswick (CCNB)             New Brunswick
 ##       college de technologie forestiere des maritimes             New Brunswick
@@ -65,25 +68,6 @@ list.files("2019_Programs_Atlantic_Terr")
 #Check vs old files, clean and enter
 #CIP matching?
 
-
-
-
-#############################
-##### Dalhousie Agricultural Campus of Dalhousie University
-## Type of website:
-Institution <- CIConnexName("Dalhousie Agricultural Campus of Dalhousie University")
-
-
-#############################
-##### halifax regional police training school
-## Type of website:
-Institution <- CIConnexName("halifax regional police training school")
-
-
-#############################
-##### maritime conservatory of performing arts
-## Type of website:
-Institution <- CIConnexName("maritime conservatory of performing arts")
 
 
 #############################

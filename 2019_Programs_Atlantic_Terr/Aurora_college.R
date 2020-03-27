@@ -73,6 +73,7 @@ program_urls <- program_urls %>%
 
 program_urls$WIL <- NA
 for(url in 1:nrow(program_urls)){
+  tryCatc({
 #for(url in 3){
   #print(program_urls$Program[url])
   webPage = read_html(paste0("http://", program_urls$url[url]))
@@ -87,7 +88,7 @@ for(url in 1:nrow(program_urls)){
   
   course_eval(courses, Institution$institution_name, program_urls$Program[url], program_urls$url[url])
   program_urls$WIL[url] = course_eval(courses, Institution$institution_name, program_urls$Program[url], program_urls$url[url])
-  
+  }, error = function(e){cat("ERROR :", conditionMessage(e), "\n")})
 }
 programs <- program_urls %>% 
   mutate(institution_name = Institution$institution_name,

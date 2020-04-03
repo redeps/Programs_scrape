@@ -17,6 +17,15 @@ CIConnexName <- function(x){
   )
 }
 
+#Checking to see if programs exists and removing if so
+remove_old_programs <- function(url, object = NA){
+  objs = ls(pos = ".GlobalEnv")
+  if(url == 1){
+    print(paste("Removed", objs[grep(paste0("^programs$|^Fees$|^program_url_collections$|^", object, "$"), objs)]))
+    rm(list = objs[grep(paste0("^programs$|^Fees$|^program_url_collections$|^", object, "$"), objs)], pos = ".GlobalEnv")
+  }
+}
+
 
 ### scraping helper functions
 
@@ -33,6 +42,16 @@ possibleError <- function(url){
   
   Error = tryCatch(
     read_html(url),
+    error = function(e) e
+  )
+  
+  return(Error)
+}
+
+possibleErrorRselenium <- function(xpath){
+  
+  Error = tryCatch(
+    remDr$findElement(using = 'xpath', xpath),
     error = function(e) e
   )
   
@@ -59,6 +78,15 @@ read_webPage <- function(url){
   if(!inherits(possibleError(url), "error")){
     webPage = read_html(url)
     return(webPage)
+  }
+}
+
+
+get_element <- function(xpath){
+  
+  if(!inherits(possibleErrorRselenium(xpath), "error")){
+    element = remDr$findElement(using = 'xpath', xpath)
+    return(element)
   }
 }
 
@@ -149,6 +177,41 @@ get_details_id <- function(webPage, id, class = NA, class_before = T){
     }
   }
 
+  
+  detail = sapply(detail, function(x) clean_tags(x))
+  
+  return(detail)
+}
+
+
+
+get_details_id_table <- function(webPage, id, class = NA, class_before = T){
+  if(class_before == T){
+    if(is.na(class)){
+      detail = webPage %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_table()
+    } else {
+      detail = webPage %>% 
+        html_nodes(class) %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_table()
+      
+    }
+  } else {
+    if(is.na(class)){
+      detail = webPage %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_table()
+    } else {
+      detail = webPage %>% 
+        html_nodes(xpath = paste0('//*[@id="', id, '"]')) %>% 
+        html_nodes(class) %>% 
+        html_table()
+      
+    }
+  }
+  
   
   detail = sapply(detail, function(x) clean_tags(x))
   
@@ -330,6 +393,13 @@ get_courses <- function(url, isTable = T, tableContClass){
 clean_string <- function(stringVar){
   return(gsub(" |/", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*', "", stringVar)))
 }
+
+get_detail_from_table <- function(table, searchColumn = "", detailColumn = "", searchTerm = ""){
+  return(table %>% select(c(searchColumn, detailColumn)) %>%  filter(grepl(searchTerm, !!sym(searchColumn), ignore.case = T)) %>% distinct() %>% summarize(detail = paste(!!sym(detailColumn), collapse = " AND "))) %>% select(detail) %>% unlist()
+}
+  
+  
+  
 
 
 ##### This is the shakiest funciton - getting course data

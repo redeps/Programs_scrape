@@ -73,7 +73,7 @@ program_urls <- program_urls %>%
 
 program_urls$WIL <- NA
 for(url in 1:nrow(program_urls)){
-  tryCatc({
+  tryCatch({
 #for(url in 3){
   #print(program_urls$Program[url])
   webPage = read_html(paste0("http://", program_urls$url[url]))

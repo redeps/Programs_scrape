@@ -63,6 +63,7 @@ colleges %>%
 
 list.files("2019_Programs_Atlantic_Terr")
 #source the above files
+#print(Instittution$instituition_name)
 
 
 #Check vs old files, clean and enter
@@ -70,22 +71,9 @@ list.files("2019_Programs_Atlantic_Terr")
 
 
 
-#############################
-##### Nova Scotia Community College (NSCC)
-## Type of website:
-Institution <- CIConnexName("Nova Scotia Community College (NSCC)")
 
 
-#############################
-##### Université Sainte-Anne - Collège de l'Acadie
-## Type of website:
-Institution <- CIConnexName("Université Sainte-Anne - Collège de l'Acadie")
 
-
-#############################
-##### Nunavut Arctic College
-## Type of website:
-Institution <- CIConnexName("Nunavut Arctic College")
 
 
 #############################

@@ -13,7 +13,7 @@ strToDf <- function(string, columnsToProduce = 2, columnNames = c("Code", "Name"
 CIConnexName <- function(x){
   return(
     colleges %>% 
-      filter(grepl(x, institution_name))
+      filter(grepl(x, institution_name, ignore.case = T))
   )
 }
 
@@ -66,6 +66,15 @@ possibleSelError <- function(remDr, xpath){
   )
   
   return(Error)
+}
+
+replace_empty_na <- function(variable){
+  if(length(variable) < 1){
+    detail = NA
+  } else {
+    detail = variable
+  }
+  return(detail)
 }
 
 clean_tags <- function(stringVar){
@@ -301,6 +310,17 @@ get_details_index <- function(webPage, searchString, class_1, class_2, class_3 =
   return(NA)
 }
 
+
+#Simpler version of above
+get_details_str_split <- function(webPage, searchString = "", splitString = "", ignoreCase =F, offset = 0){
+  detail = webPage %>% html_text() %>% str_split(splitString) %>% unlist()
+  detail = detail[grep(searchString, detail, ignore.case = ignoreCase) + offset]
+  return(detail)
+  
+}
+
+
+
 get_details_for_filtering <- function(webPage, class, split_on = "\n"){
   return(webPage %>% 
            html_nodes(class) %>% 
@@ -350,13 +370,12 @@ create_program_df <- function(Institution, url = NA, Program = NA, Credential = 
   program = tibble(institution_name = Institution$institution_name,
                    url = url, 
                    Program = Program, 
-                   Credential = Credential, 
-                   Campus = Campus, 
-                   Duration = Duration, 
-                   Description = Description, 
-                   WIL = WIL)
+                   Credential = Credential %>% replace_empty_na(), 
+                   Campus = Campus %>% replace_empty_na(), 
+                   Duration = Duration %>% replace_empty_na(), 
+                   Description = Description %>% replace_empty_na(), 
+                   WIL = WIL %>% replace_empty_na())
 
-  
   program = Institution %>% 
     left_join(program,
               by = "institution_name")
@@ -391,7 +410,7 @@ get_courses <- function(url, isTable = T, tableContClass){
 }
 
 clean_string <- function(stringVar){
-  return(gsub(" |/", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*', "", stringVar)))
+  return(gsub(" |/", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*|\t|,|:', "", stringVar)))
 }
 
 get_detail_from_table <- function(table, searchColumn = "", detailColumn = "", searchTerm = ""){
@@ -403,7 +422,7 @@ get_detail_from_table <- function(table, searchColumn = "", detailColumn = "", s
 
 
 ##### This is the shakiest funciton - getting course data
-course_eval <- function(courses, Institution, Program, Program_url, noDescription = T){
+course_eval <- function(courses, Institution, Program, Program_url, noDescription = T, FR = F){
   
   if(noDescription == T){
     course_df = courses %>% 
@@ -423,12 +442,17 @@ course_eval <- function(courses, Institution, Program, Program_url, noDescriptio
 
   
   dir.create(paste0("courses/", clean_string(Institution)), showWarnings = FALSE)
-  progFileName <- gsub(" |/|_2,}", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*', "", Program))
+  progFileName <- gsub(" |/|_2,}", "_", gsub('\\"|\n|\\(|\\)|&|-|\\*|\t|,|:', "", Program))
   if(nchar(progFileName) > 50){
     progFileName <- substr(progFileName,1,50)
   }
   write.csv(course_df, paste0("courses/", clean_string(Institution), "/", progFileName, ".csv"))
-  WIL <- course_df$Name[grepl("Pratique|Practicum|Field placement|Placement|Work experience|Co-op|coop|Apprentice|internship|field practice|clinical practice|clinical work|work term| stage ", course_df$Name, ignore.case = T)]
+  if(FR == F){
+    WIL <- course_df$Name[grepl("Pratique|Practicum|Field placement|Placement|Work experience|Co-op|coop|Apprentice|internship|field practice|clinical practice|clinical work|work term| stage ", course_df$Name, ignore.case = T)]  
+  }else {
+    WIL <- course_df$Name[grepl(" stage ", course_df$Name, ignore.case = T)]  
+  }
+  
   
   if(length(WIL) > 0){
     #print(paste(WIL, collapse = " AND "))
